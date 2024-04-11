@@ -1,5 +1,8 @@
 import { newEngine } from '@treecg/actor-init-ldes-client';
 import { OutputRepresentation } from '../lib/EventStream';
+import {DataFactory} from "n3";
+import namedNode = DataFactory.namedNode;
+const server = require('./examples/server');
 
 describe('LDESClient as a lib', () => {
     const url = "https://semiceu.github.io/LinkedDataEventStreams/example.ttl";
@@ -105,4 +108,58 @@ describe('LDESClient as a lib', () => {
             stream.destroy();
         }).on('close', done);
     });
+
+    test('multiple references between same subject and object with different predicates should be returned as quads', (done) => {
+        const url = 'http://localhost:3000/examples?fileName=multiple-references-between-subject-and-object-with-different-predicates-example.jsonld'
+        const options = {
+            representation: OutputRepresentation.Quads,
+            disableSynchronization: true
+        };
+
+        let members: any[] = [];
+        const stream = LDESClient.createReadStream(url, options);
+        stream.on('data', (member) => {
+            expect(member.quads).toBeInstanceOf(Array);
+            members.push(member);
+        }).on('close', () => {
+            const member = members[0];
+            expect(member.id.value).toEqual('http://data.lblod.info/id/public-service-snapshot/6e9334cb-272c-443d-8b0a-1b02149a5126');
+            expect(member.quads.length).toEqual(11);
+            done();
+        });
+    });
+
+    test('multiple members with complex structure', (done) => {
+        const url = 'http://localhost:3000/examples?fileName=multiple-members-with-complex-structure.jsonld'
+        const options = {
+            representation: OutputRepresentation.Quads,
+            disableSynchronization: true
+        };
+
+        let members: any[] = [];
+        const stream = LDESClient.createReadStream(url, options);
+        stream.on('data', (member) => {
+            members.push(member);
+        }).on('close', () => {
+            expect(members.length).toEqual(3);
+            const member0 = members[0];
+            expect(member0.id.value).toEqual('http://data.lblod.info/id/public-service-snapshot/6e9334cb-272c-443d-8b0a-1b02149a5127');
+            expect(member0.quads.length).toEqual(202);
+
+            const member1 = members[1];
+            expect(member1.id.value).toEqual('http://data.lblod.info/id/public-service-snapshot/a62cee64-9086-4864-9be9-1f72798a8c72');
+            expect(member1.quads.length).toEqual(12);
+
+            const member2 = members[2];
+            expect(member2.id.value).toEqual('http://data.lblod.info/id/public-service-snapshot/f9aceb0a-5225-4b0c-be55-e14a2954347a');
+            expect(member2.quads.length).toEqual(12);
+
+            done();
+        });
+    });
+
+    afterAll(() => {
+        server.close(); // Ensure the server is closed after tests
+    });
+
 });

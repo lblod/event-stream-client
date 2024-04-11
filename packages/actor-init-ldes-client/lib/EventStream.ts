@@ -295,7 +295,7 @@ export class EventStream extends Readable {
                  * gets changed to:
                  *    https://semiceu.github.io/linkeddataeventstreams/example.ttl#eventstream
                  * which prevents tree:views to get booked.
-                 * 
+                 *
                  * It also removes trailing slashes, which is incorrect.
                  */
                 let safePageUrl = pageUrl.endsWith("/") ? pageUrl.slice(0, -1) : pageUrl;
@@ -444,7 +444,6 @@ ${inspect(e)}`);
             if (!this.dereferenceMembers) {
                 let processedSubjects: Set <string> = new Set();
                 const memberQuads = this.extractMember(store, this.factory.namedNode(memberUri), processedSubjects, memberUris);
-                const memberQuadStream = StreamReadable.from(memberQuads);
                 yield {
                     uri: memberUri,
                     quads: new ArrayIterator(memberQuads)
@@ -490,29 +489,33 @@ ${inspect(e)}`);
     }
 
     protected extractMember(store: Store, id: RDF.Term, processedSubjects: Set<string>, memberUris: string[]): Quad[] {
-        let member: Quad[] = [];
+        let result: Quad[] = [];
         processedSubjects.add(id.value);
         const forwardQuads = store.getQuads(id,null,null,null);
         //const inverseQuads = store.getQuads(null,null,id,null);
         //console.log(id, forwardQuads,inverseQuads);
 
         for (const q of forwardQuads) {
-            if (!member.includes(q) && !processedSubjects.has(q.object.value)) { 
-                member.push(q);
-                if (q.object.termType !== 'Literal' && !memberUris.includes(q.object.value)) {
-                    member = member.concat(this.extractMember(store, q.object, processedSubjects, memberUris));
-                }
+
+            if(!result.includes(q)) {
+                result.push(q);
+            }
+            if (q.object.termType !== 'Literal'
+                && !processedSubjects.has(q.object.value)
+                && !memberUris.includes(q.object.value)) {
+                    result = result.concat(this.extractMember(store, q.object, processedSubjects, memberUris));
+
             }
         }
         /*for (let q of inverseQuads) {
             if (q.predicate.value !== 'https://w3id.org/tree#member' && !memberUris.includes(q.subject.value) && !processedSubjects.has(q.subject.value)) {
-                member.push(q); //also relevant triple that needs to be added
-                member = member.concat(this.extractMember(store, q.subject, processedSubjects, memberUris));
+                result.push(q); //also relevant triple that needs to be added
+                result = result.concat(this.extractMember(store, q.subject, processedSubjects, memberUris));
             }
         }*/
-        return member
+        return result;
     }
-    
+
     protected async processMembers(members: Generator<IMember>) {
 
         for (const member of members) {
@@ -522,7 +525,7 @@ ${inspect(e)}`);
             if (!(quadStream instanceof EmptyIterator)) {
                 try {
                     const context = new ActionContext({});
-                    // If representation is set, let’s return the data without serialization, 
+                    // If representation is set, let’s return the data without serialization,
                     // but in the requested representation (Object or Quads)
                     if (this.representation) {
                         // Can be "Object" or "Quads"
