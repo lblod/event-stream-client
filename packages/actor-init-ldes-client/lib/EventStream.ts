@@ -110,7 +110,7 @@ export class EventStream extends Readable {
         await this.retrieve(next.url);
         this.downloading = false;
         this.emit('page processed', next.url);
-        this._read();
+        await this._read();
     }
 
     public async _read() {
