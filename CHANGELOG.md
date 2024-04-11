@@ -1,5 +1,8 @@
 # Change Log
 
+<a name="v4.0.10"></a>
+## [v4.0.10](https://github.com/lblod/event-stream-client/pull/1) - 2024-04-11
+
 <a name="v4.0.8"></a>
 ## [v4.0.8](https://github.com/TREEcg/event-stream-client/compare/v4.0.7...v4.0.8) - 2023-05-17
 
