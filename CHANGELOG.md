@@ -1,5 +1,9 @@
 # Change Log
 
+<a name="v4.0.11"></a>
+## v4.0.11 - 2024-04-11
+- Add more logging 
+
 <a name="v4.0.10"></a>
 ## [v4.0.10](https://github.com/lblod/event-stream-client/pull/1) - 2024-04-11
 
