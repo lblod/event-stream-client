@@ -99,20 +99,24 @@ export class EventStream extends Readable {
 
     private async fetchNextPage() {
         this.logger.trace(`start fetchNextPage`);
-        this.downloading = true;
-        const next = this.bookkeeper.getNextFragmentToFetch();
-        this.logger.trace(`processing next fragmentInto  ${next.url} , ${next.refetchTime}`);
-        const wait = next.refetchTime.getTime() - new Date().getTime();
-        // Do not refetch too soon
-        if (wait > 0) {
-            this.logger.debug(`Waiting ${wait / 1000}s before refetching: ${next.url}`);
-            await this.sleep(wait);
+        try {
+            this.downloading = true;
+            const next = this.bookkeeper.getNextFragmentToFetch();
+            this.logger.trace(`processing next fragmentInto  ${next.url} , ${next.refetchTime}`);
+            const wait = next.refetchTime.getTime() - new Date().getTime();
+            // Do not refetch too soon
+            if (wait > 0) {
+                this.logger.debug(`Waiting ${wait / 1000}s before refetching: ${next.url}`);
+                await this.sleep(wait);
+            }
+            // Retrieve data
+            await this.retrieve(next.url);
+            this.emit('page processed', next.url);
+            this.logger.trace(`finish fetchNextPage`);
         }
-        // Retrieve data
-        await this.retrieve(next.url);
-        this.downloading = false;
-        this.emit('page processed', next.url);
-        await this._read();
+        finally {
+            this.downloading = false;
+        }
     }
 
     public async _read() {
@@ -142,7 +146,7 @@ export class EventStream extends Readable {
                 this.logger.trace("read>done");
                 this.push(null);
             } else {
-                this.logger.trace("read>not downloading ... so stopping?");
+                this.logger.trace("read>already downloading ... ");
             }
         } catch (err) {
             this.logger.error(inspect(err));

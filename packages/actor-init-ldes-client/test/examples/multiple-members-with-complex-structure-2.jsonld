@@ -2,13 +2,13 @@
   "timestampPath": "generatedAtTime",
   "versionOfPath": "isVersionOf",
   "view": {
-    "@id": "http://localhost:3000/examples?fileName=multiple-members-with-complex-structure.jsonld",
+    "@id": "http://localhost:3000/examples?fileName=multiple-members-with-complex-structure-2.jsonld",
     "@type": "Node",
     "relation": [
       {
-        "node": "http://localhost:3000/examples?fileName=multiple-members-with-complex-structure-2.jsonld",
+        "node": "http://localhost:3000/examples?fileName=multiple-members-with-complex-structure.jsonld",
         "path": "generatedAtTime",
-        "@type": "GreaterThanOrEqualToRelation"
+        "@type": "LessThanRelation"
       }
     ]
   },
@@ -387,7 +387,7 @@
   "@type": "EventStream",
   "member": [
     {
-      "@id": "http://data.lblod.info/id/public-service-snapshot/6e9334cb-272c-443d-8b0a-1b02149a5127",
+      "@id": "http://data.lblod.info/id/public-service-snapshot/6e9334cb-272c-443d-8b0a-1b02149a5127q",
       "@type": [
         "InstancePublicServiceSnapshot"
       ],
@@ -756,7 +756,7 @@
       ]
     },
     {
-      "@id": "http://data.lblod.info/id/public-service-snapshot/a62cee64-9086-4864-9be9-1f72798a8c72",
+      "@id": "http://data.lblod.info/id/public-service-snapshot/a62cee64-9086-4864-9be9-1f72798a8c72d",
       "@type": [
         "InstancePublicServiceSnapshot"
       ],
@@ -783,7 +783,7 @@
       "gearchiveerd": "false"
     },
     {
-      "@id": "http://data.lblod.info/id/public-service-snapshot/f9aceb0a-5225-4b0c-be55-e14a2954347a",
+      "@id": "http://data.lblod.info/id/public-service-snapshot/f9aceb0a-5225-4b0c-be55-e14a2954347af",
       "@type": [
         "InstancePublicServiceSnapshot"
       ],

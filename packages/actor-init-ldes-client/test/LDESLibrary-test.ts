@@ -135,7 +135,7 @@ describe('LDESClient as a lib', () => {
         const options = {
             representation: OutputRepresentation.Quads,
             disableSynchronization: true,
-            loggingLevel: 'debug',
+            loggingLevel: 'trace',
         };
 
         let members: any[] = [];
@@ -143,7 +143,7 @@ describe('LDESClient as a lib', () => {
         stream.on('data', (member) => {
             members.push(member);
         }).on('close', () => {
-            expect(members.length).toEqual(3);
+            expect(members.length).toEqual(6);
             const member0 = members[0];
             expect(member0.id.value).toEqual('http://data.lblod.info/id/public-service-snapshot/6e9334cb-272c-443d-8b0a-1b02149a5127');
             expect(member0.quads.length).toEqual(202);
@@ -155,6 +155,19 @@ describe('LDESClient as a lib', () => {
             const member2 = members[2];
             expect(member2.id.value).toEqual('http://data.lblod.info/id/public-service-snapshot/f9aceb0a-5225-4b0c-be55-e14a2954347a');
             expect(member2.quads.length).toEqual(12);
+
+            const member3 = members[3];
+            expect(member3.id.value).toEqual('http://data.lblod.info/id/public-service-snapshot/6e9334cb-272c-443d-8b0a-1b02149a5127q');
+            expect(member3.quads.length).toEqual(202);
+
+            const member4 = members[4];
+            expect(member4.id.value).toEqual('http://data.lblod.info/id/public-service-snapshot/a62cee64-9086-4864-9be9-1f72798a8c72d');
+            expect(member4.quads.length).toEqual(12);
+
+            const member5 = members[5];
+            expect(member5.id.value).toEqual('http://data.lblod.info/id/public-service-snapshot/f9aceb0a-5225-4b0c-be55-e14a2954347af');
+            expect(member5.quads.length).toEqual(12);
+
 
             done();
         });
