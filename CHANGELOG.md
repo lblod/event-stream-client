@@ -1,6 +1,11 @@
 # Change Log
 
-<a name="v4.0.11"></a>
+<a name="v4.0.12"></a>
+## v4.0.12 - 2024-04-11
+- Add more logging
+- ensure to stop downloading on error
+
+  <a name="v4.0.11"></a>
 ## v4.0.11 - 2024-04-11
 - Add more logging 
 
