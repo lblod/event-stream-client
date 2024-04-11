@@ -497,7 +497,9 @@ ${inspect(e)}`);
         //console.log(id, forwardQuads,inverseQuads);
 
         for (const q of forwardQuads) {
-            if (!member.includes(q) && !processedSubjects.has(q.object.value)) { 
+            //TODO LPDC-1103: does not work if there are multiple relations between subject -> object with different predicates; I think we always need to push q ?
+            //write a test for this
+            if (!member.includes(q) && !processedSubjects.has(q.object.value)) {
                 member.push(q);
                 if (q.object.termType !== 'Literal' && !memberUris.includes(q.object.value)) {
                     member = member.concat(this.extractMember(store, q.object, processedSubjects, memberUris));

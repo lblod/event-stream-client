@@ -1,5 +1,8 @@
 import { newEngine } from '@treecg/actor-init-ldes-client';
 import { OutputRepresentation } from '../lib/EventStream';
+import {DataFactory} from "n3";
+import namedNode = DataFactory.namedNode;
+const server = require('./examples/server');
 
 describe('LDESClient as a lib', () => {
     const url = "https://semiceu.github.io/LinkedDataEventStreams/example.ttl";
@@ -105,4 +108,30 @@ describe('LDESClient as a lib', () => {
             stream.destroy();
         }).on('close', done);
     });
+
+    test('multiple references between subject and object with different predicates should ', (done) => {
+        const url = 'http://localhost:3000/examples?fileName=multiple-references-between-subject-and-object-with-different-predicates-example.jsonld'
+        const options = {
+            representation: OutputRepresentation.Quads,
+            disableSynchronization: true
+        };
+
+        let members: any[] = [];
+        const stream = LDESClient.createReadStream(url, options);
+        stream.once('data', (member) => {
+            expect(member.quads).toBeInstanceOf(Array);
+            members.push(member);
+        }).on('close', () => {
+            expect(members.length).toEqual(1);
+            const member = members[0];
+            expect(member.id.value).toEqual('http://data.lblod.info/id/public-service-snapshot/6e9334cb-272c-443d-8b0a-1b02149a5126');
+            expect(member.quads.length).toEqual(11);
+            done();
+        });
+    });
+
+    afterAll(() => {
+        server.close(); // Ensure the server is closed after tests
+    });
+
 });
