@@ -1,17 +1,20 @@
 // TODO: use a more modern priority queue
+import {Logger} from "@treecg/types";
+
 const PriorityQueue = require('js-priority-queue');
 import LRU from 'lru-cache';
 
 export class Bookkeeper {
-    protected readonly queue = new PriorityQueue({ comparator: compareFragments});
+    protected readonly queue = new PriorityQueue({comparator: compareFragments});
     protected readonly queued: any = new LRU({
         max: 500,
         ttl: 1000 * 60 * 60 * 24
     }); // to know whether a fragment URL is already added to the priority queue
     protected blacklist: Set<string> = new Set();
+    protected readonly logger: Logger;
 
-    public constructor() {
-
+    public constructor(loggingLevel?: string) {
+        this.logger = new Logger(this, loggingLevel);
     }
 
     public fragmentAlreadyAdded(url: string): boolean {
@@ -27,11 +30,13 @@ export class Bookkeeper {
     }
 
     public addFragment(url: string, ttl: number): void {
+        this.logger.trace(`start addingFragment ${url} , ttl = ${ttl}`);
         if (!this.fragmentAlreadyAdded(url) && !this.fragmentIsBlacklisted(url)) {
             const fragmentInfo: FragmentInfo = {
                 "url": url,
                 "refetchTime": new Date(new Date().getTime() + ttl) // now
             }
+            this.logger.trace(`add fragmentInto to queue ${fragmentInfo.url} , ${fragmentInfo.refetchTime}`);
             this.queue.queue(fragmentInfo);
             this.queued.set(url, true);
         }
@@ -97,4 +102,4 @@ export interface SerializedBookkeper {
 
 function compareFragments(a: any, b: any) {
     return a.refetchTime.getTime() - b.refetchTime.getTime();
-};
+}

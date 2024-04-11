@@ -113,7 +113,8 @@ describe('LDESClient as a lib', () => {
         const url = 'http://localhost:3000/examples?fileName=multiple-references-between-subject-and-object-with-different-predicates-example.jsonld'
         const options = {
             representation: OutputRepresentation.Quads,
-            disableSynchronization: true
+            disableSynchronization: true,
+            loggingLevel: 'debug',
         };
 
         let members: any[] = [];
@@ -133,7 +134,8 @@ describe('LDESClient as a lib', () => {
         const url = 'http://localhost:3000/examples?fileName=multiple-members-with-complex-structure.jsonld'
         const options = {
             representation: OutputRepresentation.Quads,
-            disableSynchronization: true
+            disableSynchronization: true,
+            loggingLevel: 'debug',
         };
 
         let members: any[] = [];

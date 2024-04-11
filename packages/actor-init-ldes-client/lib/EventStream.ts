@@ -98,8 +98,10 @@ export class EventStream extends Readable {
     }
 
     private async fetchNextPage() {
+        this.logger.trace(`start fetchNextPage`);
         this.downloading = true;
         const next = this.bookkeeper.getNextFragmentToFetch();
+        this.logger.trace(`processing next fragmentInto  ${next.url} , ${next.refetchTime}`);
         const wait = next.refetchTime.getTime() - new Date().getTime();
         // Do not refetch too soon
         if (wait > 0) {
@@ -116,6 +118,7 @@ export class EventStream extends Readable {
     public async _read() {
         try {
             if (!this.downloading && this.paused) {
+                this.logger.trace("read>paused");
                 // Reading process has been externally paused
                 super.pause();
             } else if (!this.downloading && !this.paused && this.bookkeeper.nextFragmentExists()) {
@@ -123,21 +126,28 @@ export class EventStream extends Readable {
                 if (!this.disableSynchronization && this.bookkeeper.inSyncingMode() && !this.syncingmode) {
                     // We have reached the most recent fragment and synchronization is enabled
                     this.syncingmode = true;
+                    this.logger.trace("read>synchronizing");
                     this.emit('synchronizing');
                     if (!this.downloading && this.paused) {
+                        this.logger.trace("read>paused");
                         super.pause();
                     }
                 } else {
+                    this.logger.trace("read>fetching next page");
                     // Proceed and fetch more data
                     await this.fetchNextPage();
                 }
             } else if (!this.downloading) {
                 //end of the stream
-                this.logger.debug("done");
+                this.logger.trace("read>done");
                 this.push(null);
+            } else {
+                this.logger.trace("read>not downloading ... so stopping?");
             }
         } catch (err) {
             this.logger.error(inspect(err));
+            //TODO LPDC-1103: error handling?
+            throw err;
         }
     }
 
@@ -271,6 +281,8 @@ export class EventStream extends Readable {
                 })).handle.data
             );
 
+            this.logger.trace(`fetched pageQuads for ${page.url}`);
+
             // Extract TREE metadata
             const treeMetadata = await this.mediators.mediatorRdfMetadataExtract.mediate({
                 context: new ActionContext({}),
@@ -278,6 +290,8 @@ export class EventStream extends Readable {
                 metadata: StreamReadable.from(pageQuads),
                 url: page.url
             });
+
+            this.logger.trace(`fetched treeMetaData for ${page.url}`);
 
             this.emit("metadata", { ...treeMetadata.metadata, url: page.url });
 
@@ -354,12 +368,12 @@ export class EventStream extends Readable {
             }
 
             const memberUris: string[] = this.getMemberUris(treeMetadata);
+            this.logger.trace(`processing ${memberUris} for ${pageUrl}`);
             const members = this.getMembers(pageQuads, memberUris);
 
             await this.processMembers(members);
         } catch (e) {
-            this.logger.error(`Failed to retrieve ${pageUrl}
-${inspect(e)}`);
+            this.logger.error(`Failed to retrieve ${pageUrl} ${inspect(e)}`);
         }
     }
 
@@ -372,8 +386,11 @@ ${inspect(e)}`);
                 }
             }
 
+            this.logger.trace(`about to fetch ${pageUrl}`);
             // Use native fetch to get page data
             const res = await fetch(pageUrl, req);
+
+            this.logger.trace(`fetched ${pageUrl}`);
 
             // Extract response headers
             const resHeaders: Array<[string, string]> = [];
