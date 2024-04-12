@@ -1,5 +1,10 @@
 # Change Log
 
+<a name="v4.0.13"></a>
+## v4.0.13 - 2024-04-12
+- Add more logging
+- Fix resuming: continues reading
+
 <a name="v4.0.12"></a>
 ## v4.0.12 - 2024-04-11
 - Add more logging
