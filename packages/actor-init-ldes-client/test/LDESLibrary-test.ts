@@ -1,7 +1,6 @@
-import { newEngine } from '@treecg/actor-init-ldes-client';
-import { OutputRepresentation } from '../lib/EventStream';
-import {DataFactory} from "n3";
-import namedNode = DataFactory.namedNode;
+import {newEngine} from '@treecg/actor-init-ldes-client';
+import {OutputRepresentation} from '../lib/EventStream';
+
 const server = require('./examples/server');
 
 describe('LDESClient as a lib', () => {
@@ -82,7 +81,8 @@ describe('LDESClient as a lib', () => {
             disableSynchronization: true
         };
         const stream = LDESClient.createReadStream(url, options);
-        stream.once('data', () => { });
+        stream.once('data', () => {
+        });
         stream.once('metadata', (metadata) => {
             expect(metadata).toBeInstanceOf(Object);
         });
@@ -171,6 +171,35 @@ describe('LDESClient as a lib', () => {
 
             done();
         });
+    });
+
+    test('can pause and resume stream for multiple pages', (done) => {
+        const url = 'http://localhost:3000/examples?fileName=multiple-members-with-complex-structure.jsonld'
+        const expectedCount = 6;
+        const options = {
+            representation: OutputRepresentation.Quads,
+            disableSynchronization: true
+        };
+
+        let members: any[] = [];
+        const stream = LDESClient.createReadStream(url, options);
+        stream.on('data', (member) => {
+            members.push(member);
+
+            if(members.length < expectedCount) {
+                stream.pause();
+            }
+        }).on('pause', () => {
+
+            setTimeout(() => {
+                stream.resume();
+            }, 500);
+
+        }).on('close', () => {
+            expect(members.length).toEqual(expectedCount);
+            done();
+        });
+
     });
 
     afterAll(() => {

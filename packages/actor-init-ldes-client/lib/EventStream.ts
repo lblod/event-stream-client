@@ -102,7 +102,7 @@ export class EventStream extends Readable {
         try {
             this.downloading = true;
             const next = this.bookkeeper.getNextFragmentToFetch();
-            this.logger.trace(`processing next fragmentInto  ${next.url} , ${next.refetchTime}`);
+            this.logger.trace(`processing next FragmentInto {${next.url}, ${next.refetchTime}}`);
             const wait = next.refetchTime.getTime() - new Date().getTime();
             // Do not refetch too soon
             if (wait > 0) {
@@ -116,6 +116,7 @@ export class EventStream extends Readable {
         }
         finally {
             this.downloading = false;
+            await this._read();
         }
     }
 
@@ -123,8 +124,6 @@ export class EventStream extends Readable {
         try {
             if (!this.downloading && this.paused) {
                 this.logger.trace("read>paused");
-                // Reading process has been externally paused
-                super.pause();
             } else if (!this.downloading && !this.paused && this.bookkeeper.nextFragmentExists()) {
                 // Reading process is not paused, is not downloading new data and there is more data available
                 if (!this.disableSynchronization && this.bookkeeper.inSyncingMode() && !this.syncingmode) {
@@ -162,21 +161,26 @@ export class EventStream extends Readable {
     }
 
     public pause(): this {
+        this.logger.trace("stream>pause");
         this.paused = true;
-        return this;
+        return super.pause();
     }
 
     public resume(): this {
+        this.logger.trace("stream>resume");
         this.paused = false;
         super.resume();
-        return this
+
+        this._read().then(r => {});
+
+        return this;
     }
 
     public destroy(): this {
+        this.logger.trace("stream>destroy");
         // Properly close the stream by clearing any pending tasks
         clearTimeout(this.timeout);
-        super.destroy();
-        return this;
+        return super.destroy();
     }
 
     public ignorePages(urls: string[]) {

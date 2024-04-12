@@ -245,7 +245,7 @@ describe('EventStream', () => {
             stream2.on('data', () => { mock2() })
                 .on('end', () => {
                     mockEnd();
-                    expect(mockPaused).toHaveBeenCalledTimes(0);
+                    expect(mockPaused).toHaveBeenCalledTimes(1);
                     expect(mockEnd).toHaveBeenCalled();
                     expect(mock1.mock.calls.length + mock2.mock.calls.length).toBe(memberCount);
                     done();
