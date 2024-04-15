@@ -211,10 +211,6 @@ describe('LDESClient as a lib', () => {
         });
     });
 
-    //TODO LPDC-1104
-  //  write a test for an explicitly empty stream (for which the report is off)
-   // write an explicit test for a unparseable page ; so no members (for instance bogus data) (for which the report is off)
-
     test('can pause and resume stream for multiple pages', (done) => {
         const url = 'http://localhost:3000/examples?fileName=multiple-members-with-complex-structure.jsonld'
         const expectedCount = 6;
