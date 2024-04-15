@@ -1,31 +1,31 @@
-import { ActionContext, Actor, IActorTest, Mediator } from "@comunica/core";
+import {ActionContext, Actor, IActorTest, Mediator} from "@comunica/core";
 import {
     IActionRdfMetadataExtract,
     IActorRdfMetadataExtractOutput,
     ActorRdfMetadataExtract
 } from '@comunica/bus-rdf-metadata-extract';
-import { MediatorRdfParseHandle } from "@comunica/bus-rdf-parse";
-import { MediatorRdfSerializeHandle } from '@comunica/bus-rdf-serialize';
-import { IActionRdfFrame, IActorRdfFrameOutput } from "@treecg/bus-rdf-frame";
-import { Member, Logger } from "@treecg/types";
-import { Readable as StreamReadable } from 'stream';
-import { Readable } from 'readable-stream';
-import { AsyncIterator, ArrayIterator, EmptyIterator } from "asynciterator";
-import { Frame } from "jsonld/jsonld-spec";
-import { inspect } from 'util';
-import { DataFactory } from 'rdf-data-factory';
-import { JsonLdDocument } from "jsonld";
-import { Quad, Store } from "n3";
+import {MediatorRdfParseHandle} from "@comunica/bus-rdf-parse";
+import {MediatorRdfSerializeHandle} from '@comunica/bus-rdf-serialize';
+import {IActionRdfFrame, IActorRdfFrameOutput} from "@treecg/bus-rdf-frame";
+import {Member, Logger} from "@treecg/types";
+import {Readable as StreamReadable} from 'stream';
+import {Readable} from 'readable-stream';
+import {AsyncIterator, ArrayIterator, EmptyIterator} from "asynciterator";
+import {Frame} from "jsonld/jsonld-spec";
+import {inspect} from 'util';
+import {DataFactory} from 'rdf-data-factory';
+import {JsonLdDocument} from "jsonld";
+import {Quad, Store} from "n3";
 import LRU from 'lru-cache';
 import * as ContentType from 'content-type';
 import * as CachePolicy from 'http-cache-semantics';
 import * as moment from 'moment';
 import * as RDF from 'rdf-js';
 import * as RdfString from "rdf-string";
-import { Bookkeeper, SerializedBookkeper } from './Bookkeeper';
+import {Bookkeeper, SerializedBookkeper} from './Bookkeeper';
 import RateLimiter from "./RateLimiter";
 import MemberIterator from "./MemberIterator";
-import { stream2Array, stream2String } from "./Utils";
+import {stream2Array, stream2String} from "./Utils";
 
 export class EventStream extends Readable {
     protected readonly mediators: IEventStreamMediators;
@@ -50,6 +50,7 @@ export class EventStream extends Readable {
     protected readonly rateLimiter: RateLimiter;
     protected processedURIs: any;
     protected timeout: any;
+    protected readonly loggingLevel?: string;
 
     private downloading: boolean;
     private syncingmode: boolean;
@@ -62,7 +63,7 @@ export class EventStream extends Readable {
         args: IEventStreamArgs,
         state: State | null
     ) {
-        super({ objectMode: true, highWaterMark: 1000 });
+        super({objectMode: true, highWaterMark: 1000});
 
         this.mediators = mediators;
         this.accessUrl = url;
@@ -78,7 +79,7 @@ export class EventStream extends Readable {
         this.dereferenceMembers = args.dereferenceMembers;
         this.emitMemberOnce = args.emitMemberOnce;
         this.processedURIsCount = args.processedURIsCount!;
-        this.processedURIs = new LRU({ max: this.processedURIsCount });
+        this.processedURIs = new LRU({max: this.processedURIsCount});
         this.bookkeeper = new Bookkeeper();
         this.logger = new Logger(this, args.loggingLevel);
         this.downloading = false;
@@ -113,8 +114,7 @@ export class EventStream extends Readable {
             await this.retrieve(next.url);
             this.emit('page processed', next.url);
             this.logger.trace(`finish fetchNextPage`);
-        }
-        finally {
+        } finally {
             this.downloading = false;
             await this._read();
         }
@@ -149,8 +149,8 @@ export class EventStream extends Readable {
             }
         } catch (err) {
             this.logger.error(inspect(err));
-            //TODO LPDC-1103: error handling?
-            throw err;
+            this.emit('error', err);
+            this.push(null); // End stream after error
         }
     }
 
@@ -171,7 +171,8 @@ export class EventStream extends Readable {
         this.paused = false;
         super.resume();
 
-        this._read().then(r => {});
+        this._read().then(r => {
+        });
 
         return this;
     }
@@ -202,7 +203,7 @@ export class EventStream extends Readable {
                     for (const quad of member.quads) {
                         quads.push(RdfString.quadToStringQuad(quad));
                     }
-                    memberBuffer.push({ id: member.id, quads: quads });
+                    memberBuffer.push({id: member.id, quads: quads});
                 }
             } else {
                 memberBuffer.push(member);
@@ -230,7 +231,7 @@ export class EventStream extends Readable {
                     for (const quad of member.quads) {
                         quads.push(RdfString.stringQuadToQuad(quad));
                     }
-                    let _member: Member = { id: member.id, quads: quads };
+                    let _member: Member = {id: member.id, quads: quads};
                     super.unshift(_member);
                 }
             } else {
@@ -240,7 +241,7 @@ export class EventStream extends Readable {
             }
         }
 
-        this.processedURIs = new LRU({ max: this.processedURIsCount! });
+        this.processedURIs = new LRU({max: this.processedURIsCount!});
         this.processedURIs.load(JSON.parse(state.processedURIs));
     }
 
@@ -268,7 +269,7 @@ export class EventStream extends Readable {
                 // Based on the HTTP Caching headers, poll this fragment for synchronization
                 // If options.shared is false, then the response is evaluated from a perspective of a single-user cache 
                 // (i.e. private is cacheable and s-maxage is ignored)
-                const policy = new CachePolicy(page.request, page.response, { shared: false });
+                const policy = new CachePolicy(page.request, page.response, {shared: false});
                 // pollingInterval is fallback
                 const ttl = Math.max(this.pollingInterval, policy.storable() ? policy.timeToLive() : 0);
                 this.bookkeeper.addFragment(page.url, ttl);
@@ -284,7 +285,7 @@ export class EventStream extends Readable {
                     handle: {
                         context: context,
                         data: page.data,
-                        metadata: { baseIRI: page.url }
+                        metadata: {baseIRI: page.url}
                     }, handleMediaType: mediaType
                 })).handle.data
             );
@@ -301,7 +302,7 @@ export class EventStream extends Readable {
 
             this.logger.trace(`fetched treeMetaData for ${page.url}`);
 
-            this.emit("metadata", { ...treeMetadata.metadata, url: page.url });
+            this.emit("metadata", {...treeMetadata.metadata, url: page.url});
 
             // When there are no tree:relations found, search for a tree:view to continue
             // In this case, we expect that the URL parameter provided contains a tree collection's URI
@@ -347,13 +348,14 @@ export class EventStream extends Readable {
 
                     // Prune when the value of the relation contain values lower than what we need
                     if (relation["@type"][0] === "https://w3id.org/tree#LessThanRelation"
-                        && valueDate.getTime() <= this.fromTime.getTime()) { }
-                    // Prune when the value of the relation includes values lower than what we need
+                        && valueDate.getTime() <= this.fromTime.getTime()) {
+                    }
+                        // Prune when the value of the relation includes values lower than what we need
                     // and we want explicitly (fromTimeStrict) values larger than the given threshold (fromTime)
                     else if (relation["@type"][0] === "https://w3id.org/tree#GreaterThanOrEqualToRelation"
                         && valueDate.getTime() <= this.fromTime.getTime()
-                        && this.fromTimeStrict) { }
-                    else {
+                        && this.fromTimeStrict) {
+                    } else {
                         // Add node to book keeper with ttl 0 (as soon as possible)
                         for (const node of relation.node) {
                             // do not add when synchronization is disabled and node has already been processed
@@ -381,7 +383,8 @@ export class EventStream extends Readable {
 
             await this.processMembers(members);
         } catch (e) {
-            this.logger.error(`Failed to retrieve ${pageUrl} ${inspect(e)}`);
+            this.logger.error(`Failed to retrieve and/or process ${pageUrl} ${inspect(e)}`);
+            throw e;
         }
     }
 
@@ -413,7 +416,7 @@ export class EventStream extends Readable {
             return <PageMetadata>{
                 url: res.url,
                 request: req,
-                response: { status: res.status, headers: Object.fromEntries(resHeaders) },
+                response: {status: res.status, headers: Object.fromEntries(resHeaders)},
                 statusCode: res.status,
                 data: StreamReadable.fromWeb(<any>res.body?.pipeThrough(<any>new TextDecoderStream())),
                 contentType: ContentType.parse(contentType).type
@@ -438,7 +441,7 @@ export class EventStream extends Readable {
         return members;
     }
 
-    protected * getMembers(quads: RDF.Quad[], memberUris: string[]): Generator<IMember> {
+    protected* getMembers(quads: RDF.Quad[], memberUris: string[]): Generator<IMember> {
         // Load quads into a RDF-JS store for easier BGP lookups
         const store = new Store(quads);
         const result: Record<string, AsyncIterator<RDF.Quad>> = {};
@@ -467,17 +470,18 @@ export class EventStream extends Readable {
             this.processedURIs.set(memberUri, {});
 
             if (!this.dereferenceMembers) {
-                let processedSubjects: Set <string> = new Set();
+                let processedSubjects: Set<string> = new Set();
                 const memberQuads = this.extractMember(store, this.factory.namedNode(memberUri), processedSubjects, memberUris);
                 yield {
                     uri: memberUri,
                     quads: new ArrayIterator(memberQuads)
                 };
             } else {
-                const quads = new MemberIterator(memberUri, this.rateLimiter);
+                const quads = new MemberIterator(memberUri, this.rateLimiter, this.loggingLevel);
                 quads.on('error', (msg, e) => {
-                    this.logger.error(msg + '\n' + inspect(e));
-                })
+                    this.logger.error('MemberIterator error ' + msg + '\n' + inspect(e));
+                    throw e;
+                });
                 yield {
                     uri: memberUri,
                     quads: quads,
@@ -516,19 +520,19 @@ export class EventStream extends Readable {
     protected extractMember(store: Store, id: RDF.Term, processedSubjects: Set<string>, memberUris: string[]): Quad[] {
         let result: Quad[] = [];
         processedSubjects.add(id.value);
-        const forwardQuads = store.getQuads(id,null,null,null);
+        const forwardQuads = store.getQuads(id, null, null, null);
         //const inverseQuads = store.getQuads(null,null,id,null);
         //console.log(id, forwardQuads,inverseQuads);
 
         for (const q of forwardQuads) {
 
-            if(!result.includes(q)) {
+            if (!result.includes(q)) {
                 result.push(q);
             }
             if (q.object.termType !== 'Literal'
                 && !processedSubjects.has(q.object.value)
                 && !memberUris.includes(q.object.value)) {
-                    result = result.concat(this.extractMember(store, q.object, processedSubjects, memberUris));
+                result = result.concat(this.extractMember(store, q.object, processedSubjects, memberUris));
 
             }
         }
@@ -559,19 +563,19 @@ export class EventStream extends Readable {
                                 const framedResult = (await this.mediators.mediatorRdfFrame.mediate({
                                     context: context,
                                     data: quadStream,
-                                    frames: [{ "@id": id }],
+                                    frames: [{"@id": id}],
                                     jsonLdContext: this.jsonLdContext
                                 })).data;
                                 const firstEntry = framedResult.entries().next();
-                                this.push({ "id": firstEntry.value[0]["@id"], object: firstEntry.value[1] });
+                                this.push({"id": firstEntry.value[0]["@id"], object: firstEntry.value[1]});
                             } else {
                                 const result = JSON.parse(await stream2String(
                                     <StreamReadable>(await this.mediators.mediatorRdfSerializeHandle.mediate({
                                         context: context,
-                                        handle: { quadStream: quadStream, context: context },
+                                        handle: {quadStream: quadStream, context: context},
                                         handleMediaType: "application/ld+json"
                                     })).handle.data));
-                                this.push({ "id": result[0]["@id"], object: result });
+                                this.push({"id": result[0]["@id"], object: result});
                             }
                         } else {
                             // Build an array from the quads iterator
@@ -596,7 +600,7 @@ export class EventStream extends Readable {
                             const serializedString = await stream2String(
                                 <StreamReadable>(await this.mediators.mediatorRdfSerializeHandle.mediate({
                                     context: context,
-                                    handle: { quadStream: quadStream, context: context },
+                                    handle: {quadStream: quadStream, context: context},
                                     handleMediaType: this.mimeType
                                 })).handle.data);
 
@@ -628,6 +632,7 @@ export class EventStream extends Readable {
                 } catch (error) {
                     this.logger.error(`Failed to process member ${id}
     ${inspect(error)}`);
+                    throw error;
                 }
             } else {
                 this.push('');

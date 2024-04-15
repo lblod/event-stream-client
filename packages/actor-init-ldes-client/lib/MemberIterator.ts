@@ -3,6 +3,8 @@ import { AsyncIterator } from "asynciterator";
 import rdfDereferencer from "rdf-dereference";
 import RateLimiter from "./RateLimiter";
 import { stream2Array } from "./Utils";
+import {Logger} from "@treecg/types";
+import {inspect} from "util";
 
 export default class MemberIterator extends AsyncIterator<Quad> {
     private waiting: boolean;
@@ -14,9 +16,12 @@ export default class MemberIterator extends AsyncIterator<Quad> {
 
     private rateLimiter: RateLimiter;
 
+    protected readonly logger: Logger;
+
     constructor(
         beginUrl: string,
         rateLimiter: RateLimiter,
+        loggingLevel?: string,
         // TODO: shape
     ) {
         super();
@@ -26,6 +31,8 @@ export default class MemberIterator extends AsyncIterator<Quad> {
         this.pageQueue = [];
         this.waiting = false;
         this.rateLimiter = rateLimiter;
+
+        this.logger = new Logger(this, loggingLevel);
 
         this.fetchPage(beginUrl);
     }
@@ -75,15 +82,19 @@ export default class MemberIterator extends AsyncIterator<Quad> {
     }
 
     protected async fetchPageRetry(url: string, attempts = 3): Promise<Quad[]> {
+        this.logger.trace(`fetch Page Retry ${url} , attempts = ${attempts}`);
+
         await this.rateLimiter.planRequest(url);
 
         try {
             const { data } = await rdfDereferencer.dereference(url);
             return await stream2Array<Quad>(data);
         } catch (error) {
+            this.logger.debug(`fetch Page Retry ${url}` + '\n' + inspect(error));
             if (attempts > 0) {
                 return this.fetchPageRetry(url, attempts - 1);
             } else {
+                this.logger.debug(`fetch Page Retry - emitting error - closing stream ${url}` + '\n' + inspect(error));
                 this.emit('error', `Cannot fetch ${url}`, error);
                 this.close();
                 return [];
