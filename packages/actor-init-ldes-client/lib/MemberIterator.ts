@@ -1,8 +1,8 @@
-import { Quad } from "@rdfjs/types";
-import { AsyncIterator } from "asynciterator";
+import {Quad} from "@rdfjs/types";
+import {AsyncIterator} from "asynciterator";
 import rdfDereferencer from "rdf-dereference";
 import RateLimiter from "./RateLimiter";
-import { stream2Array } from "./Utils";
+import {stream2Array} from "./Utils";
 import {Logger} from "@treecg/types";
 import {inspect} from "util";
 
@@ -53,7 +53,8 @@ export default class MemberIterator extends AsyncIterator<Quad> {
             const pageUrl = this.pageQueue.pop();
             if (pageUrl) {
                 // Fetch more data
-                this.fetchPage(pageUrl);
+                this.fetchPage(pageUrl).then(r => {
+                });
             } else {
                 this.close();
             }
@@ -87,7 +88,7 @@ export default class MemberIterator extends AsyncIterator<Quad> {
         await this.rateLimiter.planRequest(url);
 
         try {
-            const { data } = await rdfDereferencer.dereference(url);
+            const {data} = await rdfDereferencer.dereference(url);
             return await stream2Array<Quad>(data);
         } catch (error) {
             this.logger.debug(`fetch Page Retry ${url}` + '\n' + inspect(error));

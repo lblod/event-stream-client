@@ -84,6 +84,9 @@ export class EventStream extends Readable {
         this.logger = new Logger(this, args.loggingLevel);
         this.downloading = false;
         this.syncingmode = false;
+
+        this.loggingLevel = args.loggingLevel;
+
         if (args.requestsPerMinute) {
             this.rateLimiter = new RateLimiter(60000. / args.requestsPerMinute);
         } else {
