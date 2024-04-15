@@ -1,5 +1,10 @@
 # Change Log
 
+<a name="v4.0.14"></a>
+## v4.0.14 - 2024-04-15
+- Add more logging
+- Propagate errors to outer stream
+
 <a name="v4.0.13"></a>
 ## v4.0.13 - 2024-04-12
 - Add more logging
