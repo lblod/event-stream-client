@@ -1,5 +1,9 @@
 # Change Log
 
+<a name="v4.0.15"></a>
+## v4.0.15 - 2024-04-15
+- Add more logging
+
 <a name="v4.0.14"></a>
 ## v4.0.14 - 2024-04-15
 - Add more logging
