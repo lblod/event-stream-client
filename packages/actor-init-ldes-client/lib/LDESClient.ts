@@ -37,6 +37,7 @@ export class LDESClient extends ActorInit implements ILDESClientArgs {
     --requestsPerMinute          How many requests per minutes may be sent to the same host
     --loggingLevel               The detail level of logging; useful for debugging problems. (default: info)
     --processedURIsCount         The maximum number of processed URIs that remain in the cache. (default: 15000)
+    --reportErrorOnEmptyPage     Reports an error if we find a ldes page without any members.
     --help                       print this help message
   `;
 
@@ -65,6 +66,7 @@ export class LDESClient extends ActorInit implements ILDESClientArgs {
     public requestsPerMinute?: number;
     public loggingLevel: string;
     public processedURIsCount: number;
+    public reportErrorOnEmptyPage: boolean;
 
     public constructor(args: ILDESClientArgs) {
         super(args);
@@ -156,6 +158,14 @@ export class LDESClient extends ActorInit implements ILDESClientArgs {
 
         options.processedURIsCount = args.processedURIsCount ? args.processedURIsCount : this.processedURIsCount;
 
+        if (args.reportErrorOnEmptyPage) {
+            if (typeof args.reportErrorOnEmptyPage == "boolean") {
+                options.reportErrorOnEmptyPage = args.reportErrorOnEmptyPage;
+            } else {
+                options.reportErrorOnEmptyPage = args.reportErrorOnEmptyPage.toLowerCase() == 'true' ? true : false;
+            }
+        }
+
         const url = args._[args._.length - 1];
         const eventStream = this.createReadStream(url, options);
         return { 'stdout': eventStream };
@@ -219,6 +229,10 @@ export class LDESClient extends ActorInit implements ILDESClientArgs {
 
         if(!options.processedURIsCount) {
             options.processedURIsCount = this.processedURIsCount;
+        }
+
+        if (typeof options.reportErrorOnEmptyPage != "boolean") {
+            options.reportErrorOnEmptyPage = this.reportErrorOnEmptyPage;
         }
 
         const mediators = {

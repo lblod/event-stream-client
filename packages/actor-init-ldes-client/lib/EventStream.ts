@@ -51,6 +51,7 @@ export class EventStream extends Readable {
     protected processedURIs: any;
     protected timeout: any;
     protected readonly loggingLevel?: string;
+    protected readonly reportErrorOnEmptyPage?: boolean;
 
     private downloading: boolean;
     private syncingmode: boolean;
@@ -82,6 +83,7 @@ export class EventStream extends Readable {
         this.processedURIs = new LRU({max: this.processedURIsCount});
         this.bookkeeper = new Bookkeeper();
         this.logger = new Logger(this, args.loggingLevel);
+        this.reportErrorOnEmptyPage = args.reportErrorOnEmptyPage;
         this.downloading = false;
         this.syncingmode = false;
 
@@ -381,9 +383,16 @@ export class EventStream extends Readable {
             }
 
             const memberUris: string[] = this.getMemberUris(treeMetadata);
-            this.logger.trace(`processing ${memberUris} for ${pageUrl}`);
-            const members = this.getMembers(pageQuads, memberUris);
 
+            this.logger.trace(`processing [${memberUris}] for ${pageUrl}`);
+
+            if (memberUris
+                && memberUris.length === 0
+                && this.reportErrorOnEmptyPage) {
+                throw Error(`No Member Uris could be extracted from ${pageUrl}`);
+            }
+
+            const members = this.getMembers(pageQuads, memberUris);
             await this.processMembers(members);
         } catch (e) {
             this.logger.error(`Failed to retrieve and/or process ${pageUrl} ${inspect(e)}`);
@@ -679,6 +688,7 @@ export interface IEventStreamArgs {
     requestsPerMinute?: number,
     loggingLevel?: string,
     processedURIsCount?: number,
+    reportErrorOnEmptyPage?: boolean,
 }
 
 export interface IEventStreamMediators {

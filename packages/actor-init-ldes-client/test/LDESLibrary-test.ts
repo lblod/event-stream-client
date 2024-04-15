@@ -173,6 +173,48 @@ describe('LDESClient as a lib', () => {
         });
     });
 
+    test('empty members on a page throws error', (done) => {
+        const url = 'http://localhost:3000/examples?fileName=empty-members-example.jsonld'
+        const options = {
+            representation: OutputRepresentation.Quads,
+            disableSynchronization: true,
+            loggingLevel: 'trace',
+            reportErrorOnEmptyPage: true,
+        };
+
+        let members: any[] = [];
+        const stream = LDESClient.createReadStream(url, options);
+        stream.on('data', (member) => {
+            members.push(member);
+        }).on('error', (error) => {
+            expect(error.message).toContain('No Member Uris could be extracted from');
+            done();
+        });
+    });
+
+    test('invalid json-ld page throws error', (done) => {
+        const url = 'http://localhost:3000/examples?fileName=invalid-page-example.jsonld'
+        const options = {
+            representation: OutputRepresentation.Quads,
+            disableSynchronization: true,
+            loggingLevel: 'trace',
+            reportErrorOnEmptyPage: true,
+        };
+
+        let members: any[] = [];
+        const stream = LDESClient.createReadStream(url, options);
+        stream.on('data', (member) => {
+            members.push(member);
+        }).on('error', (error) => {
+            expect(error.message).toContain('Unexpected "h" at position 1 in state STOP');
+            done();
+        });
+    });
+
+    //TODO LPDC-1104
+  //  write a test for an explicitly empty stream (for which the report is off)
+   // write an explicit test for a unparseable page ; so no members (for instance bogus data) (for which the report is off)
+
     test('can pause and resume stream for multiple pages', (done) => {
         const url = 'http://localhost:3000/examples?fileName=multiple-members-with-complex-structure.jsonld'
         const expectedCount = 6;
