@@ -1,5 +1,9 @@
 # Change Log
 
+<a name="v4.0.16"></a>
+## v4.0.16 - 2024-04-15
+- add option to reportErrorOnEmptyPage (reports an error if we find a ldes page without any members)
+
 <a name="v4.0.15"></a>
 ## v4.0.15 - 2024-04-15
 - Add more logging
