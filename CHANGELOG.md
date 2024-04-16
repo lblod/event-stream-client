@@ -1,5 +1,9 @@
 # Change Log
 
+<a name="v4.0.19"></a>
+## v4.0.19 - 2024-04-16
+- Throw error if getting page returns non http ok code (4xx, 5xx)
+
 <a name="v4.0.18"></a>
 ## v4.0.18 - 2024-04-16
 - add response status logging
