@@ -211,6 +211,25 @@ describe('LDESClient as a lib', () => {
         });
     });
 
+    test('non success http return code throws error', (done) => {
+        const url = 'http://localhost:3000/examples?fileName=non-existing-page.jsonld'
+        const options = {
+            representation: OutputRepresentation.Quads,
+            disableSynchronization: true,
+            loggingLevel: 'trace',
+            reportErrorOnEmptyPage: true,
+        };
+
+        let members: any[] = [];
+        const stream = LDESClient.createReadStream(url, options);
+        stream.on('data', (member) => {
+            members.push(member);
+        }).on('error', (error) => {
+            expect(error.message).toContain('Received unexpected response status [404], request failed');
+            done();
+        });
+    });
+
     test('can pause and resume stream for multiple pages', (done) => {
         const url = 'http://localhost:3000/examples?fileName=multiple-members-with-complex-structure.jsonld'
         const expectedCount = 6;

@@ -430,7 +430,11 @@ export class EventStream extends Readable {
             }
 
             this.logger.trace(`content type parsed [${contentType}]`);
-            this.logger.trace(`status code [${res.status}]`);
+            this.logger.debug(`status code [${res.status}]`);
+
+            if(!res.ok) {
+                throw Error(`Received unexpected response status [${res.status}], request failed`);
+            }
 
             return <PageMetadata>{
                 url: res.url,

@@ -6,6 +6,10 @@ const fs = require('fs');
 app.get('/examples', (req: any, res: any) => {
     const fileName = req.query.fileName;
     const filePath = path.join(__dirname, `./${fileName}`);
+    if(!fs.existsSync(filePath)) {
+        res.status(404).send('Not found');
+        return;
+    }
     const readStream = fs.createReadStream(filePath);
     res.status(200).type('application/ld+json');
 
