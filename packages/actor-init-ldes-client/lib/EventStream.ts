@@ -418,6 +418,9 @@ export class EventStream extends Readable {
             // Extract response headers
             const resHeaders: Array<[string, string]> = [];
             res.headers.forEach((v, k) => resHeaders.push([k, v]));
+
+            this.logger.trace(`response headers ${JSON.stringify(resHeaders)}`);
+
             const trailingCharacterRegex = /;$/;
             let contentType = <string>res.headers.get('content-type');
             if (contentType) {
@@ -425,6 +428,9 @@ export class EventStream extends Readable {
             } else {
                 contentType = "";
             }
+
+            this.logger.trace(`content type parsed [${contentType}]`);
+
             return <PageMetadata>{
                 url: res.url,
                 request: req,
