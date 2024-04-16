@@ -430,6 +430,7 @@ export class EventStream extends Readable {
             }
 
             this.logger.trace(`content type parsed [${contentType}]`);
+            this.logger.trace(`status code [${res.status}]`);
 
             return <PageMetadata>{
                 url: res.url,
