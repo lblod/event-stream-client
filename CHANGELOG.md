@@ -1,5 +1,9 @@
 # Change Log
 
+<a name="v4.0.18"></a>
+## v4.0.18 - 2024-04-16
+- add response status logging
+ 
 <a name="v4.0.17"></a>
 ## v4.0.17 - 2024-04-16
 - add response headers logging
